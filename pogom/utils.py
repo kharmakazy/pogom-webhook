@@ -28,6 +28,9 @@ def get_args():
     parser.add_argument('-P', '--port', type=int, help='Set web server listening port', default=5000)
 
     parser.add_argument('-d', '--debug', type=str.lower, help='Debug Level [info|debug]', default=None)
+    
+    parser.add_argument('-wh', '--webhook', help='Define URL(s) to POST webhook information to',
+                        nargs='*', default=False, dest='webhooks')
 
     return parser.parse_args()
 
@@ -82,3 +85,23 @@ def get_encryption_lib_path():
         raise Exception(err)
 
     return lib_path
+
+# Add webhook for PokeAlarm -- Ugly Copy Pasta
+def send_to_webhook(message_type, message):
+    args = get_args()
+
+    data = {
+        'type': message_type,
+        'message': message
+    }
+
+    if args.webhooks:
+        webhooks = args.webhooks
+
+        for w in webhooks:
+            try:
+                requests.post(w, json=data, timeout=(None, 5))
+            except requests.exceptions.ReadTimeout:
+                log.debug('Response timeout on webhook endpoint %s', w)
+            except requests.exceptions.RequestException as e:
+                log.debug(e)
