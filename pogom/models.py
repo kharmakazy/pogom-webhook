@@ -9,8 +9,9 @@ from peewee import Model, SqliteDatabase, InsertQuery, IntegerField, \
 from datetime import datetime
 from base64 import b64encode
 import threading
+import calendar
 
-from .utils import get_pokemon_name
+from .utils import get_pokemon_name, send_to_webhook
 
 db = SqliteDatabase('pogom.db', pragmas=(
     ('journal_mode', 'WAL'),
@@ -115,6 +116,10 @@ def parse_map(map_dict):
         for p in cell.get('wild_pokemons', []):
             if p['encounter_id'] in pokemons:
                 continue  # prevent unnecessary parsing
+            
+            disappear_time = datetime.utcfromtimestamp(
+                (p['last_modified_timestamp_ms'] +
+                 p['time_till_hidden_ms']) / 1000.0)
 
             pokemons[p['encounter_id']] = {
                 'encounter_id': b64encode(str(p['encounter_id'])),
@@ -122,9 +127,7 @@ def parse_map(map_dict):
                 'pokemon_id': p['pokemon_data']['pokemon_id'],
                 'latitude': p['latitude'],
                 'longitude': p['longitude'],
-                'disappear_time': datetime.utcfromtimestamp(
-                        (p['last_modified_timestamp_ms'] +
-                         p['time_till_hidden_ms']) / 1000.0)
+                'disappear_time': disappear_time
             }
             if p['time_till_hidden_ms'] < 0:
                 pokemons[p['encounter_id']]['disappear_time'] = datetime.utcfromtimestamp(
@@ -133,11 +136,11 @@ def parse_map(map_dict):
             # Add webhook for PokeAlarm -- Ugly Copy Pasta
             webhook_data = {
                 'encounter_id': b64encode(str(p['encounter_id'])),
-                'spawnpoint_id': p['spawnpoint_id'],
+                'spawnpoint_id': p['spawn_point_id'],
                 'pokemon_id': p['pokemon_data']['pokemon_id'],
                 'latitude': p['latitude'],
                 'longitude': p['longitude'],
-                'disappear_time': calendar.timegm(d_t.timetuple()),
+                'disappear_time': calendar.timegm(disappear_time.timetuple()),
                 'last_modified_time': p['last_modified_timestamp_ms'],
                 'time_until_hidden_ms': p['time_till_hidden_ms']
             }

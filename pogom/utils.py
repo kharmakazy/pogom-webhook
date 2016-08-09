@@ -10,6 +10,7 @@ import uuid
 import sys
 import platform
 import logging
+import requests
 from datetime import datetime, timedelta
 
 from . import config
@@ -102,6 +103,6 @@ def send_to_webhook(message_type, message):
             try:
                 requests.post(w, json=data, timeout=(None, 5))
             except requests.exceptions.ReadTimeout:
-                log.debug('Response timeout on webhook endpoint %s', w)
+                log.error('Response timeout on webhook endpoint %s', w)
             except requests.exceptions.RequestException as e:
-                log.debug(e)
+                log.error(e)
