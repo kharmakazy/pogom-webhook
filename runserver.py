@@ -14,6 +14,7 @@ from pogom.app import Pogom
 from pogom.models import create_tables
 from pogom.scan import Scanner, ScanConfig
 from pogom.utils import get_args, get_encryption_lib_path
+from pogom.webhook import Webhook_Sender, enable_webhook
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +71,12 @@ if __name__ == '__main__':
 
     scanner = Scanner(scan_config)
     scanner.start()
+    
+    # enable webhook thread if any defined
+    if args.webhooks:
+        enable_webhook()
+        webhook_sender = Webhook_Sender(args.webhooks)
+        webhook_sender.start()
 
     app = Pogom(scan_config, __name__)
     config['ROOT_PATH'] = app.root_path

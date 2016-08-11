@@ -11,7 +11,8 @@ from base64 import b64encode
 import threading
 import calendar
 
-from .utils import get_pokemon_name, send_to_webhook
+from .utils import get_pokemon_name
+from .webhook import send_to_webhook
 
 db = SqliteDatabase('pogom.db', pragmas=(
     ('journal_mode', 'WAL'),
