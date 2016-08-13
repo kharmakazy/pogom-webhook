@@ -22,6 +22,9 @@ def send_to_webhook(message_type, message):
 def enable_webhook():
     global webhook_enabled
     webhook_enabled = True
+    
+def is_webhook_enabled():
+    return webhook_enabled
 
 class Webhook_Sender(Thread):
 
